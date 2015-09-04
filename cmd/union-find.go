@@ -11,6 +11,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/dagolden/zzz-algorithms-go/uf"
 	"io"
 	"log"
 	"os"
@@ -38,14 +39,21 @@ func readPair(r *bufio.Reader) (p, q int, err error) {
 func main() {
 	in := bufio.NewReader(os.Stdin)
 	nc := readNodeCount(in)
-	fmt.Println("Node count:", nc)
+	qf := uf.NewQuickFind(nc)
 
 	for {
 		p, q, err := readPair(in)
 		if err != nil {
 			break
 		}
-		fmt.Println("Pair:", p, q)
+		if qf.Connected(p, q) {
+			continue
+		}
+		qf.Union(p, q)
+		fmt.Printf("%d %d\n", p, q)
 	}
 
+	fmt.Printf("%d components\n", qf.Count())
+
+	return
 }
