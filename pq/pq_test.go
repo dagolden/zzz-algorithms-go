@@ -11,27 +11,27 @@ import (
 	"testing"
 )
 
-func compareInts(i, j interface{}) bool {
-	return i.(int) < j.(int)
-}
-
 func TestPQInts(t *testing.T) {
-	q := pq.New(compareInts)
-	if q == nil {
-		t.Errorf("New() wasn't't be nil")
+	_, err := pq.New(&pq.IntHeap{0, 1, 2, 3})
+	if err == nil {
+		t.Errorf("New() with data didn't error")
 	}
-	if q.Size() != 0 {
-		t.Errorf("Size() on empty wasn't 0")
+	q, err := pq.New(new(pq.IntHeap))
+	if q == nil || err != nil {
+		t.Errorf("New() failed")
+	}
+	if q.Len() != 0 {
+		t.Errorf("Len() on empty wasn't 0")
 	}
 	if q.Peek() != nil {
 		t.Errorf("Peek() on empty wasn't nil")
 	}
-	q.Push(1)
-	q.Push(2)
-	q.Push(3)
-	q.Push(0)
-	for i := 0; i < 4; i++ {
-		t.Log("Heap is", q)
+	for i := 10; i >= 0; i-- {
+		q.Push(i)
+		// t.Log("Heap is", q)
+	}
+	for i := 0; i <= 10; i++ {
+		// t.Log("Heap is", q)
 		if q.Peek().(int) != i {
 			t.Error("Peek() wasn't", i)
 		}
