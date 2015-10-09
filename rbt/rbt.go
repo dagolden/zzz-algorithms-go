@@ -21,7 +21,7 @@ func New() (*tree, error) {
 
 func (t *tree) Put(k string, v int) error {
 	if t.root == nil {
-		t.root = &node{key: k, val: v}
+		t.root = &node{key: k, val: v, size: 1}
 		return nil
 	}
 	return t.root.Put(k, v)
@@ -34,16 +34,31 @@ func (t tree) Get(k string) (int, error) {
 	return t.root.Get(k)
 }
 
+func (t tree) Size() int {
+	if t.root == nil {
+		return 0
+	}
+	return sizeOf(t.root)
+}
+
+func (t tree) Iterator() *treeIterator {
+
+	it := &treeIterator{make([]*node, 0)}
+	it.descendLeft(t.root)
+
+	return it
+}
+
 type node struct {
 	key   string
 	val   int
-	nodes int
+	size  int
 	isRed bool
 	left  *node
 	right *node
 }
 
-func (n *node) Get(k string) (int, error) {
+func (n node) Get(k string) (int, error) {
 	if k == n.key {
 		return n.val, nil
 	}
@@ -62,21 +77,55 @@ func (n *node) Get(k string) (int, error) {
 	return 0, fmt.Errorf("Key %s was not found", k)
 }
 
-func (n *node) Put(k string, v int) error {
-	if k < n.key {
+func (n *node) Put(k string, v int) (err error) {
+	switch {
+	case k < n.key:
 		if n.left == nil {
-			n.left = &node{key: k, val: v}
-			return nil
+			n.left = &node{key: k, val: v, size: 1}
+		} else {
+			err = n.left.Put(k, v)
 		}
-		return n.left.Put(k, v)
-	}
-	if k > n.key {
+	case k > n.key:
 		if n.right == nil {
-			n.right = &node{key: k, val: v}
-			return nil
+			n.right = &node{key: k, val: v, size: 1}
+		} else {
+			err = n.right.Put(k, v)
 		}
-		return n.right.Put(k, v)
+	default:
+		n.val = v
 	}
-	n.val = v
+	n.size = sizeOf(n.left) + sizeOf(n.right) + 1
 	return nil
+}
+
+// sizeOf is conditional; it returns zero for a nil pointer
+func sizeOf(n *node) int {
+	if n == nil {
+		return 0
+	}
+	return n.size
+}
+
+type treeIterator struct {
+	stack []*node
+}
+
+func (it *treeIterator) descendLeft(current *node) {
+	for current != nil {
+		it.stack = append(it.stack, current)
+		current = current.left
+	}
+	return
+}
+
+func (it treeIterator) HasNext() bool {
+	return len(it.stack) != 0
+}
+
+func (it *treeIterator) Next() (string, int) {
+	last := len(it.stack) - 1
+	n := it.stack[last]
+	it.stack = it.stack[:last]
+	it.descendLeft(n.right)
+	return n.key, n.val
 }

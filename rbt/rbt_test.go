@@ -17,6 +17,10 @@ func TestRBT(t *testing.T) {
 		t.Errorf("New() failed")
 	}
 
+	if size := rb.Size(); size != 0 {
+		t.Errorf("Size() was %d, not 0", size)
+	}
+
 	data := []string{"S", "E", "A", "R", "C", "H"}
 	for i, c := range data {
 		err := rb.Put(c, i)
@@ -24,6 +28,11 @@ func TestRBT(t *testing.T) {
 			t.Errorf("Put(%s, %d) failed", c, i)
 		}
 	}
+
+	if size := rb.Size(); size != len(data) {
+		t.Errorf("Size() was %d, not %d", size, len(data))
+	}
+
 	for i, c := range data {
 		val, err := rb.Get(c)
 		if err != nil {
@@ -31,5 +40,15 @@ func TestRBT(t *testing.T) {
 		} else if val != i {
 			t.Errorf("Get(%s) was %d, not %d", c, val, i)
 		}
+	}
+
+	it := rb.Iterator()
+	str := ""
+	for it.HasNext() {
+		s, _ := it.Next()
+		str += s
+	}
+	if str != "ACEHRS" {
+		t.Errorf("Iterator returned '%s', but expected '%s'", str, "ACEHRS")
 	}
 }
